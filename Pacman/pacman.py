@@ -371,6 +371,7 @@ c_w = 303+(32-16) #Clyde width
 
 def startGame():
 
+  username = nameEntry(screen)
   all_sprites_list = pygame.sprite.RenderPlain()
 
   block_list = pygame.sprite.RenderPlain()
@@ -511,6 +512,7 @@ def startGame():
       if len(blocks_hit_list) > 0:
           score +=len(blocks_hit_list)
       
+          
       # ALL GAME LOGIC SHOULD GO ABOVE THIS COMMENT
    
       # ALL CODE TO DRAW SHOULD GO BELOW THIS COMMENT
@@ -520,16 +522,22 @@ def startGame():
       gate.draw(screen)
       all_sprites_list.draw(screen)
       monsta_list.draw(screen)
+    
+      
 
       text=font.render("Score: "+str(score)+"/"+str(bll), True, red)
       screen.blit(text, [10, 10])
 
       if score == bll:
+        with open ('score.csv', 'a') as file:
+            file.write(username + " , " + str(score) +'\n')
         doNext("Congratulations, you won!",145,all_sprites_list,block_list,monsta_list,pacman_collide,wall_list,gate)
 
       monsta_hit_list = pygame.sprite.spritecollide(Pacman, monsta_list, False)
 
       if monsta_hit_list:
+        with open ('score.csv', 'a') as file:
+            file.write(username + " , " + str(score) +'\n')
         doNext("Game Over",235,all_sprites_list,block_list,monsta_list,pacman_collide,wall_list,gate)
 
       # ALL CODE TO DRAW SHOULD GO ABOVE THIS COMMENT
@@ -537,6 +545,32 @@ def startGame():
       pygame.display.flip()
     
       clock.tick(10)
+
+def nameEntry(screen):
+  input_font = pygame.font.Font(None, 36)
+  name = ""
+  input_active = True
+
+  while input_active:
+    for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN and len(name) > 0:
+                    input_active = False  # Player entered name, exit loop
+                elif event.key == pygame.K_BACKSPACE:
+                    name = name[:-1]  # Remove last character on backspace
+                else:
+                    name += event.unicode  # Add typed character to name
+
+    # Clear the screen
+    screen.fill(black)
+    # Render name entry text
+    text_surface = input_font.render("Enter your name: " + name, True, white)
+    screen.blit(text_surface, (100, 200))
+
+    pygame.display.flip()
+
+  return name
+
 
 def doNext(message,left,all_sprites_list,block_list,monsta_list,pacman_collide,wall_list,gate):
   while True:
@@ -546,7 +580,8 @@ def doNext(message,left,all_sprites_list,block_list,monsta_list,pacman_collide,w
           pygame.quit()
         if event.type == pygame.KEYDOWN:
           if event.key == pygame.K_ESCAPE:
-            pygame.quit()
+            mainMenu(screen)
+            
           if event.key == pygame.K_RETURN:
             del all_sprites_list
             del block_list
@@ -575,6 +610,81 @@ def doNext(message,left,all_sprites_list,block_list,monsta_list,pacman_collide,w
 
       clock.tick(10)
 
-startGame()
+black = (0, 0, 0)
+white = (255, 255, 255)
+blue = (0, 0, 255)
 
-pygame.quit()
+def nameEntry(screen):
+    input_font = pygame.font.Font(None, 36)
+    name = ""
+    input_active = True
+
+    while input_active:
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN and len(name) > 0:
+                    input_active = False  # Player entered name, exit loop
+                elif event.key == pygame.K_BACKSPACE:
+                    name = name[:-1]  # Remove last character on backspace
+                else:
+                    name += event.unicode  # Add typed character to name
+
+        screen.fill(black)
+
+        text_surface = input_font.render("Enter your name: " + name, True, white)
+        screen.blit(text_surface, (100, 200))
+
+        pygame.display.flip()
+
+    return name
+
+def mainMenu(screen):
+    menu_font = pygame.font.Font(None, 36)
+    selected_option = 0
+    menu_options = ["Start Game", "Quit"]
+    username = ""
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    selected_option = (selected_option - 1) % len(menu_options)
+                elif event.key == pygame.K_DOWN:
+                    selected_option = (selected_option + 1) % len(menu_options)
+                elif event.key == pygame.K_RETURN:
+                    if selected_option == 0:  # Start Game selected
+                        startGame()
+                    elif selected_option == 1:  # Quit selected
+                        pygame.quit()
+                    
+                        
+
+        screen.fill(black)
+
+        for idx, option in enumerate(menu_options):
+            if idx == selected_option:
+                text_surface = menu_font.render("> " + option + " <", True, white)
+            else:
+                text_surface = menu_font.render(option, True, white)
+            screen.blit(text_surface, (200, 200 + idx * 50))
+
+        pygame.display.flip()
+
+def initScreen():
+    pygame.init()
+    screen = pygame.display.set_mode([800, 600])
+    pygame.display.set_caption('Main Menu')
+    return screen
+
+def main():
+    username = mainMenu(screen)
+    if username:
+        print("Username entered:", username)
+        startGame()
+
+    pygame.quit()
+
+if __name__ == "__main__":
+    main()
