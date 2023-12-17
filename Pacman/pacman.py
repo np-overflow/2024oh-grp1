@@ -638,10 +638,90 @@ def nameEntry(screen):
 
     return name
 
+def scoreBoard():
+
+    screen.fill(black)
+    scoreboard_font = pygame.font.Font(None, 36)
+
+    try:
+        with open('scores.csv', 'r') as file:
+            lines = file.readlines()
+        lines.sort(key=lambda x: int(x.split(',')[1]), reverse=True)  # Sort scores by the second column (score)
+        
+
+        title = scoreboard_font.render("Scoreboard", True, white)
+        title_rect = title.get_rect(center=(screen.get_width() // 2, 50))
+        screen.blit(title, title_rect)
+
+        max_width = 0
+        score_entries = []
+
+        alpha_label = scoreboard_font.render("Alpha Lion King Dragon Winner", True, white)
+        alpha_rect = alpha_label.get_rect(center=(screen.get_width() // 2, 80))
+        screen.blit(alpha_label, alpha_rect)
+
+        first_entry = lines[0]  # First entry will be displayed above "The Rest"
+        first_data = first_entry.strip().split(',')
+        first_name = first_data[0]
+        first_score = int(first_data[1])
+
+        # Display first entry above "The Rest"
+        first_text = f"1. {first_name}: {first_score}"
+        first_surface = scoreboard_font.render(first_text, True, white)
+        first_rect = first_surface.get_rect(center=(screen.get_width() // 2, 120))
+        screen.blit(first_surface, first_rect)
+        max_width = max(max_width, first_surface.get_width())
+
+        rest_entries = lines[1:5]  # Rest of the entries to be displayed under "The Rest"
+
+        # Render "The Rest" below the first-place entry
+        rest_text = scoreboard_font.render("The Rest", True, white)
+        rest_rect = rest_text.get_rect(center=(screen.get_width() // 2, 200))
+        screen.blit(rest_text, rest_rect)
+
+        starting_y = 250
+        padding = 60  # Increased padding between entries
+        for i, line in enumerate(rest_entries):  # Display rest of the scores
+            score_data = line.strip().split(',')
+            name = score_data[0]
+            score = int(score_data[1])
+
+            score_text = f"{i + 2}. {name}: {score}"  # Start numbering from 2 for the rest
+            score_surface = scoreboard_font.render(score_text, True, white)
+            score_entries.append(score_surface)
+            max_width = max(max_width, score_surface.get_width())
+
+        max_width += 20  # Adding additional padding to the maximum width
+
+        starting_y = 250
+        for i, entry in enumerate(score_entries):  # Render rest of the entries with adjusted alignment
+            entry_rect = entry.get_rect(center=(screen.get_width() // 2, starting_y))
+            entry_rect.centerx = screen.get_width() // 2  # Set the center of the rect horizontally
+            screen.blit(entry, entry_rect)
+            starting_y += padding  # Increase the Y-coordinate spacing between entries
+
+
+    except FileNotFoundError:
+        error_message = scoreboard_font.render("No scores yet!", True, white)
+        error_rect = error_message.get_rect(center=(screen.get_width() // 2, 200))
+        screen.blit(error_message, error_rect)
+
+
+    pygame.display.flip()
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    mainMenu(screen)
+
+
 def mainMenu(screen):
     menu_font = pygame.font.Font(None, 36)
     selected_option = 0
-    menu_options = ["Start Game", "Quit"]
+    menu_options = ["Start Game","Scoreboard", "Quit"]
     username = ""
 
     while True:
@@ -657,7 +737,9 @@ def mainMenu(screen):
                     if selected_option == 0:  # Start Game selected
                         startGame()
                     elif selected_option == 1:  # Quit selected
-                        pygame.quit()
+                        scoreBoard()
+                    elif selected_option == 2:
+                        quit()
                     
                         
 
