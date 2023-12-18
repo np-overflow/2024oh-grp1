@@ -758,7 +758,7 @@ def mainMenu(screen):
                 text_surface = menu_font.render("> " + option + " <", True, white)
             else:
                 text_surface = menu_font.render(option, True, white)
-            screen.blit(text_surface, (200, 200 + idx * 50))
+            screen.blit(text_surface, (200, 375 + idx * 50))
 
         pygame.display.flip()
 
