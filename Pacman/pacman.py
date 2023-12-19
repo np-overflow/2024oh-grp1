@@ -735,7 +735,7 @@ def startMultiplayerGame():
       screen.blit(text, [10, 10])
 
       if score == bll:
-        with open ('scores.csv', 'a') as file:
+        with open ('scoresMultiplayer.csv', 'a') as file:
             file.write(username + " , " + str(score) +'\n')
         doNextMultiplayer("Congratulations, you won!",145,all_sprites_list,block_list,monsta_list,pacman_collide,wall_list,gate)
 
@@ -743,6 +743,8 @@ def startMultiplayerGame():
       monsta_hit_list2 = pygame.sprite.spritecollide(Pacman2, monsta_list, False)
 
       if monsta_hit_list or monsta_hit_list2:
+        with open ('scoresMultiplayer.csv', 'a') as file:
+            file.write(username + " , " + str(score) +'\n')
         doNextMultiplayer("Game Over",235,all_sprites_list,block_list,monsta_list,pacman_collide,wall_list,gate)
 
       # ALL CODE TO DRAW SHOULD GO ABOVE THIS COMMENT
@@ -750,34 +752,6 @@ def startMultiplayerGame():
       pygame.display.flip()
     
       clock.tick(10)
-
-def nameEntry(screen):
-  input_font = pygame.font.Font(None, 36)
-  name = ""
-  input_active = True
-
-  while input_active:
-    for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RETURN and len(name) > 0:
-                    input_active = False  # Player entered name, exit loop
-                elif event.key == pygame.K_BACKSPACE:
-                    name = name[:-1]  # Remove last character on backspace
-                else:
-                    name += event.unicode  # Add typed character to name
-
-    # Clear the screen
-    #screen.fill(black)
-    name_background = pygame.image.load('Pacman/images/name-entry.png')
-    screen.blit(name_background, (-20,0))
-    # Render name entry text
-    text_surface = input_font.render("Enter your name: " + name, True, white)
-    screen.blit(text_surface, (100, 200))
-
-    pygame.display.flip()
-
-  return name
-
 
 def doNextSingleplayer(message,left,all_sprites_list,block_list,monsta_list,pacman_collide,wall_list,gate):
   while True:
@@ -967,11 +941,92 @@ def scoreBoard():
                 if event.key == pygame.K_ESCAPE:
                     mainMenu(screen)
 
+def multiplayerScoreBoard():
+
+    #screen.fill(black)
+    score_background = pygame.image.load('Pacman/images/scoreboard.png')
+    screen.blit(score_background, (-20,0))
+    scoreboard_font = pygame.font.Font(None, 36)
+
+    try:
+        with open('scoresMultiplayer.csv', 'r') as file:
+            lines = file.readlines()
+        lines.sort(key=lambda x: int(x.split(',')[1]), reverse=True)  # Sort scores by the second column (score)
+        
+
+        title = scoreboard_font.render("Scoreboard", True, white)
+        title_rect = title.get_rect(center=(screen.get_width() // 2, 50))
+        screen.blit(title, title_rect)
+
+        max_width = 0
+        score_entries = []
+
+        alpha_label = scoreboard_font.render("Alpha Lion King Dragon Winner", True, white)
+        alpha_rect = alpha_label.get_rect(center=(screen.get_width() // 2, 80))
+        screen.blit(alpha_label, alpha_rect)
+
+        first_entry = lines[0]  # First entry will be displayed above "The Rest"
+        first_data = first_entry.strip().split(',')
+        first_name = first_data[0]
+        first_score = int(first_data[1])
+
+        # Display first entry above "The Rest"
+        first_text = f"1. {first_name}: {first_score}"
+        first_surface = scoreboard_font.render(first_text, True, white)
+        first_rect = first_surface.get_rect(center=(screen.get_width() // 2, 120))
+        screen.blit(first_surface, first_rect)
+        max_width = max(max_width, first_surface.get_width())
+
+        rest_entries = lines[1:5]  # Rest of the entries to be displayed under "The Rest"
+
+        # Render "The Rest" below the first-place entry
+        rest_text = scoreboard_font.render("The Rest", True, white)
+        rest_rect = rest_text.get_rect(center=(screen.get_width() // 2, 200))
+        screen.blit(rest_text, rest_rect)
+
+        starting_y = 250
+        padding = 60  # Increased padding between entries
+        for i, line in enumerate(rest_entries):  # Display rest of the scores
+            score_data = line.strip().split(',')
+            name = score_data[0]
+            score = int(score_data[1])
+
+            score_text = f"{i + 2}. {name}: {score}"  # Start numbering from 2 for the rest
+            score_surface = scoreboard_font.render(score_text, True, white)
+            score_entries.append(score_surface)
+            max_width = max(max_width, score_surface.get_width())
+
+        max_width += 20  # Adding additional padding to the maximum width
+
+        starting_y = 250
+        for i, entry in enumerate(score_entries):  # Render rest of the entries with adjusted alignment
+            entry_rect = entry.get_rect(center=(screen.get_width() // 2, starting_y))
+            entry_rect.centerx = screen.get_width() // 2  # Set the center of the rect horizontally
+            screen.blit(entry, entry_rect)
+            starting_y += padding  # Increase the Y-coordinate spacing between entries
+
+
+    except FileNotFoundError:
+        error_message = scoreboard_font.render("No scores yet!", True, white)
+        error_rect = error_message.get_rect(center=(screen.get_width() // 2, 200))
+        screen.blit(error_message, error_rect)
+
+
+    pygame.display.flip()
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    mainMenu(screen)
+
 
 def mainMenu(screen):
     menu_font = pygame.font.Font(None, 36)
     selected_option = 0
-    menu_options = ["Start Singleplayer Game", "Start Multiplayer Game", "Scoreboard", "Quit"]
+    menu_options = ["Start Singleplayer Game", "Start Multiplayer Game", "Singlplayer Scoreboard", "Multiplayer Scoreboard", "Quit"]
     username = ""
 
     while True:
@@ -990,7 +1045,9 @@ def mainMenu(screen):
                         startMultiplayerGame()
                     elif selected_option == 2:  # Quit selected
                         scoreBoard()
-                    elif selected_option == 3:
+                    elif selected_option == 3:  # Quit selected
+                        multiplayerScoreBoard()
+                    elif selected_option == 4:
                         quit()
                     
                         
