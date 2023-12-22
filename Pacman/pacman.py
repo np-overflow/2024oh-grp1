@@ -1026,7 +1026,7 @@ def multiplayerScoreBoard():
 def mainMenu(screen):
     menu_font = pygame.font.Font(None, 36)
     selected_option = 0
-    menu_options = ["Start Singleplayer Game", "Start Multiplayer Game", "Singlplayer Scoreboard", "Multiplayer Scoreboard", "Quit"]
+    menu_options = ["Start Singleplayer Game", "Start Multiplayer Game", "Singleplayer Scoreboard", "Multiplayer Scoreboard", "Quit"]
     username = ""
 
     while True:
@@ -1061,7 +1061,7 @@ def mainMenu(screen):
                 text_surface = menu_font.render("> " + option + " <", True, white)
             else:
                 text_surface = menu_font.render(option, True, white)
-            screen.blit(text_surface, (200, 375 + idx * 50))
+            screen.blit(text_surface, (150, 350 + idx * 50))
 
         pygame.display.flip()
 
