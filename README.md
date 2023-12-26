@@ -11,14 +11,13 @@ Deadline: 04/01/2024
 ## Implemented
 * Theme and Sprite changes
 * Music Change
-
+* Ghost speed (Easy)
+* Scoreboard 
+* Welcome Screen
 ## To be Implemented
 
 * Cleaner code
-* Changing of Ghost speed
-* Scoreboard
 * Multiplayer
-* Welcome Screen
 
 # Credits and References
 
