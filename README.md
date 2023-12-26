@@ -14,10 +14,10 @@ Deadline: 04/01/2024
 * Ghost speed (Easy)
 * Scoreboard 
 * Welcome Screen
-## To be Implemented
-
-* Cleaner code
 * Multiplayer
+
+## To be Implemented
+* Cleaner code
 
 # Credits and References
 
