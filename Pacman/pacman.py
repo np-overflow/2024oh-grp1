@@ -2,7 +2,10 @@
 #https://github.com/hbokmann/Pacman
   
 import pygame #._view
-  
+import random
+import copy
+import time
+
 black = (0,0,0)
 white = (255,255,255)
 blue = (0,0,255)
@@ -10,6 +13,8 @@ green = (0,255,0)
 red = (255,0,0)
 purple = (255,0,255)
 yellow   = ( 255, 255,   0)
+colours = [blue,green,red,purple,yellow]
+rand_color = random.randint(0,len(colours))
 
 Trollicon=pygame.image.load('Pacman\\images\\Overflow.png')
 pygame.display.set_icon(Trollicon)
@@ -83,7 +88,7 @@ def setupRoomOne(all_sprites_list):
      
     # Loop through the list. Create the wall, add it to the list
     for item in walls:
-        wall=Wall(item[0],item[1],item[2],item[3],blue)
+        wall=Wall(item[0],item[1],item[2],item[3],colours[rand_color-1])
         wall_list.add(wall)
         all_sprites_list.add(wall)
          
@@ -327,10 +332,67 @@ Clyde_directions = [
 [15,0,9],
 ]
 
-pl = len(Pinky_directions)-1
-bl = len(Blinky_directions)-1
-il = len(Inky_directions)-1
-cl = len(Clyde_directions)-1
+# pl = len(Pinky_directions)-1
+# bl = len(Blinky_directions)-1
+# il = len(Inky_directions)-1
+# cl = len(Clyde_directions)-1
+
+
+# ============================!!!!!!!!!!!! NEW LINE FROM GHOST SPEED ====================================
+
+all_directions = [Pinky_directions, Blinky_directions, Inky_directions, Clyde_directions]
+#Generates random pause amount and pause duration for ghost
+def speedAlgorithm(pintlow,pintup,dintlow,dintup, directions_copy):
+    for direction_set in directions_copy:
+        pause_amount = random.randint(pintlow,pintup)
+        while pause_amount > 0:
+            pause_duration = random.randint(dintlow,dintup)
+            set_length = len(direction_set) -1
+            set_index = random.randint(2,set_length)
+            direction_set.insert(set_index, [0,0,pause_duration])
+            pause_amount -= 1
+
+def difficultySelect(screen):
+  font = pygame.font.Font(None, 36)
+  title_font = pygame.font.Font(None,42)
+  selected_option = 0
+  difficulty_options = ["Easy", "Medium", "Hard"]
+  return_value = 3
+  active = True
+  while active: 
+      for event in pygame.event.get():
+          if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    selected_option = (selected_option - 1) % len(difficulty_options)
+                elif event.key == pygame.K_DOWN:
+                    selected_option = (selected_option + 1) % len(difficulty_options)
+                elif event.key == pygame.K_RETURN:
+                    if selected_option == 0:  # Easy, Medium, Hard
+                        return_value = 0
+                    elif selected_option == 1: 
+                        return_value = 1
+                    elif selected_option == 2:
+                        return_value = 2
+                    active = False
+      
+      diff_background = pygame.image.load('Pacman/images/scoreboard.png')
+      screen.blit(diff_background, (-30,0))
+      draw_text("Select Difficulty", title_font, white, 180, 75)
+      for idx, option in enumerate(difficulty_options):
+            if idx == selected_option:
+                draw_text("> " + option + " <", font, white, 240, 195 + idx * 50)
+                
+            else:
+                draw_text(option, font, white, 240, 195 + idx * 50)
+      pygame.display.flip()
+  return return_value                 
+
+def draw_text(text, font, color, x, y):
+    img = font.render(text, True, color)
+    screen.blit(img, (x,y))
+
+# ============================!!!!!!!!!!!! NEW LINE FROM GHOST SPEED ====================================
+
 
 # Call this function so the Pygame library can initialize itself
 pygame.init()
@@ -372,6 +434,28 @@ c_w = 303+(32-16) #Clyde width
 def startSingleplayerGame():
 
   username = nameEntry(screen)
+  return_value = difficultySelect(screen)
+  #Adds pauses if difficulty is easy or medium
+  if return_value == 0:
+    directions = copy.deepcopy(all_directions)
+    speedAlgorithm(13,15,2,5, directions)
+    
+  elif return_value == 1:
+    directions = copy.deepcopy(all_directions)
+    speedAlgorithm(6,9,1,3, directions)
+
+  elif return_value == 2:
+    directions = copy.deepcopy(all_directions)
+     
+  Pinky_directions = directions[0]
+  Blinky_directions = directions[1]
+  Inky_directions = directions[2]
+  Clyde_directions = directions[3]
+  pl = len(Pinky_directions)-1
+  bl = len(Blinky_directions)-1
+  il = len(Inky_directions)-1
+  cl = len(Clyde_directions)-1
+
   all_sprites_list = pygame.sprite.RenderPlain()
 
   block_list = pygame.sprite.RenderPlain()
@@ -450,7 +534,11 @@ def startSingleplayerGame():
 
   i = 0
 
+  start = time.time()
+
   while done == False:
+      cur_time = time.time()
+      stopwatch_time = cur_time - start
       # ALL EVENT PROCESSING SHOULD GO BELOW THIS COMMENT
       for event in pygame.event.get():
           if event.type == pygame.QUIT:
@@ -528,16 +616,24 @@ def startSingleplayerGame():
       text=font.render("Score: "+str(score)+"/"+str(bll), True, red)
       screen.blit(text, [10, 10])
 
+      game_time =font.render(f"Time: {stopwatch_time:.4f}", True, red)
+      screen.blit(game_time, [430, 10])
+
       if score == bll:
-        with open ('scores.csv', 'a') as file:
-            file.write(username + " , " + str(score) +'\n')
+        if return_value == 0:
+            with open ('scoresEas.csv', 'a') as file:
+                file.write(f"{username} , {stopwatch_time:.4f}\n")
+        elif return_value == 1:
+            with open ('scoresMed.csv', 'a') as file:
+                file.write(f"{username} , {stopwatch_time:.4f}\n")
+        else:
+            with open ('scoresHar.csv', 'a') as file:
+                file.write(f"{username} , {stopwatch_time:.4f}\n")
         doNextSingleplayer("Congratulations, you won!",145,all_sprites_list,block_list,monsta_list,pacman_collide,wall_list,gate)
 
       monsta_hit_list = pygame.sprite.spritecollide(Pacman, monsta_list, False)
 
       if monsta_hit_list:
-        with open ('scores.csv', 'a') as file:
-            file.write(username + " , " + str(score) +'\n')
         doNextSingleplayer("Game Over",235,all_sprites_list,block_list,monsta_list,pacman_collide,wall_list,gate)
 
       # ALL CODE TO DRAW SHOULD GO ABOVE THIS COMMENT
@@ -549,6 +645,28 @@ def startSingleplayerGame():
 def startMultiplayerGame():
 
   username = nameEntry(screen)
+  return_value = difficultySelect(screen)
+  #Adds pauses if difficulty is easy or medium
+  if return_value == 0:
+    directions = copy.deepcopy(all_directions)
+    speedAlgorithm(13,15,2,5, directions)
+    
+  elif return_value == 1:
+    directions = copy.deepcopy(all_directions)
+    speedAlgorithm(6,9,1,3, directions)
+
+  elif return_value == 2:
+    directions = copy.deepcopy(all_directions)
+     
+  Pinky_directions = directions[0]
+  Blinky_directions = directions[1]
+  Inky_directions = directions[2]
+  Clyde_directions = directions[3]
+  pl = len(Pinky_directions)-1
+  bl = len(Blinky_directions)-1
+  il = len(Inky_directions)-1
+  cl = len(Clyde_directions)-1
+  
   all_sprites_list = pygame.sprite.RenderPlain()
 
   block_list = pygame.sprite.RenderPlain()
@@ -629,12 +747,18 @@ def startMultiplayerGame():
   bll = len(block_list)
 
   score = 0
+  pacman1_score = 0
+  pacman2_score = 0
 
   done = False
 
   i = 0
 
+  start = time.time()
+
   while done == False:
+      cur_time = time.time()
+      stopwatch_time = cur_time - start
       # ALL EVENT PROCESSING SHOULD GO BELOW THIS COMMENT
       for event in pygame.event.get():
           if event.type == pygame.QUIT:
@@ -709,14 +833,20 @@ def startMultiplayerGame():
       Clyde.update(wall_list,False)
 
       # See if the Pacman block has collided with anything.
-      blocks_hit_list = pygame.sprite.spritecollide(Pacman, block_list, True)
+      pacman1_hit_list = pygame.sprite.spritecollide(Pacman, block_list, True)
+      pacman2_hit_list = pygame.sprite.spritecollide(Pacman2, block_list, True)
 
       # See if the Pacman2 block has collided with anything.
-      blocks_hit_list = pygame.sprite.spritecollide(Pacman2, block_list, True)
-       
+      blocks_hit_list = pacman1_hit_list + pacman2_hit_list
+
+
       # Check the list of collisions.
       if len(blocks_hit_list) > 0:
           score +=len(blocks_hit_list)
+      if len(pacman1_hit_list) > 0:
+          pacman1_score +=len(pacman1_hit_list)
+      if len(pacman2_hit_list) > 0:
+          pacman2_score +=len(pacman2_hit_list)
       
           
       # ALL GAME LOGIC SHOULD GO ABOVE THIS COMMENT
@@ -733,13 +863,30 @@ def startMultiplayerGame():
 
       text=font.render("Score: "+str(score)+"/"+str(bll), True, red)
       screen.blit(text, [10, 10])
+      text1=font.render("Light Score: "+str(pacman1_score)+"/"+str(bll), True, red)
+      screen.blit(text1, [10, 40])
+      text2=font.render("Dark Score: "+str(pacman2_score)+"/"+str(bll), True, red)
+      screen.blit(text2, [10, 70])
+
+      game_time =font.render(f"Time: {stopwatch_time:.4f}", True, red)
+      screen.blit(game_time, [430, 10])
 
       if score == bll:
-        with open ('scoresMultiplayer.csv', 'a') as file:
-            file.write(username + " , " + str(score) +'\n')
+        if return_value == 0:
+            with open ('scoresMultiplayerEas.csv', 'a') as file:
+                file.write(f"{username} , {stopwatch_time:.4f}\n")
+        elif return_value == 1:
+            with open ('scoresMultiplayerMed.csv', 'a') as file:
+                file.write(f"{username} , {stopwatch_time:.4f}\n")
+        else:
+            with open ('scoresMultiplayerHar.csv', 'a') as file:
+                file.write(f"{username} , {stopwatch_time:.4f}\n")
         doNextMultiplayer("Congratulations, you won!",145,all_sprites_list,block_list,monsta_list,pacman_collide,wall_list,gate)
 
+
+
       monsta_hit_list = pygame.sprite.spritecollide(Pacman, monsta_list, False)
+      
       monsta_hit_list2 = pygame.sprite.spritecollide(Pacman2, monsta_list, False)
 
       if monsta_hit_list or monsta_hit_list2:
@@ -861,166 +1008,471 @@ def nameEntry(screen):
     return name
 
 def scoreBoard():
-
+    return_value = difficultySelect(screen)
     #screen.fill(black)
     score_background = pygame.image.load('Pacman/images/scoreboard.png')
     screen.blit(score_background, (-20,0))
     scoreboard_font = pygame.font.Font(None, 36)
 
-    try:
-        with open('scores.csv', 'r') as file:
-            lines = file.readlines()
-        lines.sort(key=lambda x: int(x.split(',')[1]), reverse=True)  # Sort scores by the second column (score)
-        
+    #Adds pauses if difficulty is easy or medium
+    if return_value == 0:
+        try:
+            with open('scoresEas.csv', 'r') as file:
+                lines = file.readlines()
+            lines.sort(key=lambda x: float(x.split(',')[1]))  # Sort scores by the second column (score)
+            
 
-        title = scoreboard_font.render("Scoreboard", True, white)
-        title_rect = title.get_rect(center=(screen.get_width() // 2, 50))
-        screen.blit(title, title_rect)
+            title = scoreboard_font.render("Scoreboard", True, white)
+            title_rect = title.get_rect(center=(screen.get_width() // 2, 50))
+            screen.blit(title, title_rect)
 
-        max_width = 0
-        score_entries = []
+            max_width = 0
+            score_entries = []
 
-        alpha_label = scoreboard_font.render("Alpha Lion King Dragon Winner", True, white)
-        alpha_rect = alpha_label.get_rect(center=(screen.get_width() // 2, 80))
-        screen.blit(alpha_label, alpha_rect)
+            alpha_label = scoreboard_font.render("Alpha Lion King Dragon Winner", True, yellow)
+            alpha_rect = alpha_label.get_rect(center=(screen.get_width() // 2, 80))
+            screen.blit(alpha_label, alpha_rect)
 
-        first_entry = lines[0]  # First entry will be displayed above "The Rest"
-        first_data = first_entry.strip().split(',')
-        first_name = first_data[0]
-        first_score = int(first_data[1])
+            first_entry = lines[0]  # First entry will be displayed above "The Rest"
+            first_data = first_entry.strip().split(',')
+            first_name = first_data[0]
+            first_score = float(first_data[1])
 
-        # Display first entry above "The Rest"
-        first_text = f"1. {first_name}: {first_score}"
-        first_surface = scoreboard_font.render(first_text, True, white)
-        first_rect = first_surface.get_rect(center=(screen.get_width() // 2, 120))
-        screen.blit(first_surface, first_rect)
-        max_width = max(max_width, first_surface.get_width())
+            # Display first entry above "The Rest"
+            first_text = f"1. {first_name}: {first_score}"
+            first_surface = scoreboard_font.render(first_text, True, yellow)
+            first_rect = first_surface.get_rect(center=(screen.get_width() // 2, 120))
+            screen.blit(first_surface, first_rect)
+            max_width = max(max_width, first_surface.get_width())
 
-        rest_entries = lines[1:5]  # Rest of the entries to be displayed under "The Rest"
+            rest_entries = lines[1:5]  # Rest of the entries to be displayed under "The Rest"
 
-        # Render "The Rest" below the first-place entry
-        rest_text = scoreboard_font.render("The Rest", True, white)
-        rest_rect = rest_text.get_rect(center=(screen.get_width() // 2, 200))
-        screen.blit(rest_text, rest_rect)
+            # Render "The Rest" below the first-place entry
+            rest_text = scoreboard_font.render("The Rest", True, white)
+            rest_rect = rest_text.get_rect(center=(screen.get_width() // 2, 200))
+            screen.blit(rest_text, rest_rect)
 
-        starting_y = 250
-        padding = 60  # Increased padding between entries
-        for i, line in enumerate(rest_entries):  # Display rest of the scores
-            score_data = line.strip().split(',')
-            name = score_data[0]
-            score = int(score_data[1])
+            starting_y = 250
+            padding = 60  # Increased padding between entries
+            for i, line in enumerate(rest_entries):  # Display rest of the scores
+                score_data = line.strip().split(',')
+                name = score_data[0]
+                score = float(score_data[1])
 
-            score_text = f"{i + 2}. {name}: {score}"  # Start numbering from 2 for the rest
-            score_surface = scoreboard_font.render(score_text, True, white)
-            score_entries.append(score_surface)
-            max_width = max(max_width, score_surface.get_width())
+                score_text = f"{i + 2}. {name}: {score}"  # Start numbering from 2 for the rest
+                score_surface = scoreboard_font.render(score_text, True, white)
+                score_entries.append(score_surface)
+                max_width = max(max_width, score_surface.get_width())
 
-        max_width += 20  # Adding additional padding to the maximum width
+            max_width += 20  # Adding additional padding to the maximum width
 
-        starting_y = 250
-        for i, entry in enumerate(score_entries):  # Render rest of the entries with adjusted alignment
-            entry_rect = entry.get_rect(center=(screen.get_width() // 2, starting_y))
-            entry_rect.centerx = screen.get_width() // 2  # Set the center of the rect horizontally
-            screen.blit(entry, entry_rect)
-            starting_y += padding  # Increase the Y-coordinate spacing between entries
-
-
-    except FileNotFoundError:
-        error_message = scoreboard_font.render("No scores yet!", True, white)
-        error_rect = error_message.get_rect(center=(screen.get_width() // 2, 200))
-        screen.blit(error_message, error_rect)
+            starting_y = 250
+            for i, entry in enumerate(score_entries):  # Render rest of the entries with adjusted alignment
+                entry_rect = entry.get_rect(center=(screen.get_width() // 2, starting_y))
+                entry_rect.centerx = screen.get_width() // 2  # Set the center of the rect horizontally
+                screen.blit(entry, entry_rect)
+                starting_y += padding  # Increase the Y-coordinate spacing between entries
 
 
-    pygame.display.flip()
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    mainMenu(screen)
+        except :
+            error_message = scoreboard_font.render("No scores yet!", True, white)
+            error_rect = error_message.get_rect(center=(screen.get_width() // 2, 200))
+            screen.blit(error_message, error_rect)
+
+
+        pygame.display.flip()
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        mainMenu(screen)
+    
+    elif return_value == 1:
+        try:
+            with open('scoresMed.csv', 'r') as file:
+                lines = file.readlines()
+            lines.sort(key=lambda x: float(x.split(',')[1]))  # Sort scores by the second column (score)
+            
+
+            title = scoreboard_font.render("Scoreboard", True, white)
+            title_rect = title.get_rect(center=(screen.get_width() // 2, 50))
+            screen.blit(title, title_rect)
+
+            max_width = 0
+            score_entries = []
+
+            alpha_label = scoreboard_font.render("Alpha Lion King Dragon Winner", True, yellow)
+            alpha_rect = alpha_label.get_rect(center=(screen.get_width() // 2, 80))
+            screen.blit(alpha_label, alpha_rect)
+
+            first_entry = lines[0]  # First entry will be displayed above "The Rest"
+            first_data = first_entry.strip().split(',')
+            first_name = first_data[0]
+            first_score = float(first_data[1])
+
+            # Display first entry above "The Rest"
+            first_text = f"1. {first_name}: {first_score}"
+            first_surface = scoreboard_font.render(first_text, True, yellow)
+            first_rect = first_surface.get_rect(center=(screen.get_width() // 2, 120))
+            screen.blit(first_surface, first_rect)
+            max_width = max(max_width, first_surface.get_width())
+
+            rest_entries = lines[1:5]  # Rest of the entries to be displayed under "The Rest"
+
+            # Render "The Rest" below the first-place entry
+            rest_text = scoreboard_font.render("The Rest", True, white)
+            rest_rect = rest_text.get_rect(center=(screen.get_width() // 2, 200))
+            screen.blit(rest_text, rest_rect)
+
+            starting_y = 250
+            padding = 60  # Increased padding between entries
+            for i, line in enumerate(rest_entries):  # Display rest of the scores
+                score_data = line.strip().split(',')
+                name = score_data[0]
+                score = float(score_data[1])
+
+                score_text = f"{i + 2}. {name}: {score}"  # Start numbering from 2 for the rest
+                score_surface = scoreboard_font.render(score_text, True, white)
+                score_entries.append(score_surface)
+                max_width = max(max_width, score_surface.get_width())
+
+            max_width += 20  # Adding additional padding to the maximum width
+
+            starting_y = 250
+            for i, entry in enumerate(score_entries):  # Render rest of the entries with adjusted alignment
+                entry_rect = entry.get_rect(center=(screen.get_width() // 2, starting_y))
+                entry_rect.centerx = screen.get_width() // 2  # Set the center of the rect horizontally
+                screen.blit(entry, entry_rect)
+                starting_y += padding  # Increase the Y-coordinate spacing between entries
+
+
+        except :
+            error_message = scoreboard_font.render("No scores yet!", True, white)
+            error_rect = error_message.get_rect(center=(screen.get_width() // 2, 200))
+            screen.blit(error_message, error_rect)
+
+
+        pygame.display.flip()
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        mainMenu(screen)
+
+    elif return_value == 2:
+        try:
+            with open('scoresHar.csv', 'r') as file:
+                lines = file.readlines()
+            lines.sort(key=lambda x: float(x.split(',')[1]))  # Sort scores by the second column (score)
+            
+
+            title = scoreboard_font.render("Scoreboard", True, white)
+            title_rect = title.get_rect(center=(screen.get_width() // 2, 50))
+            screen.blit(title, title_rect)
+
+            max_width = 0
+            score_entries = []
+
+            alpha_label = scoreboard_font.render("Alpha Lion King Dragon Winner", True, yellow)
+            alpha_rect = alpha_label.get_rect(center=(screen.get_width() // 2, 80))
+            screen.blit(alpha_label, alpha_rect)
+
+            first_entry = lines[0]  # First entry will be displayed above "The Rest"
+            first_data = first_entry.strip().split(',')
+            first_name = first_data[0]
+            first_score = float(first_data[1])
+
+            # Display first entry above "The Rest"
+            first_text = f"1. {first_name}: {first_score}"
+            first_surface = scoreboard_font.render(first_text, True, yellow)
+            first_rect = first_surface.get_rect(center=(screen.get_width() // 2, 120))
+            screen.blit(first_surface, first_rect)
+            max_width = max(max_width, first_surface.get_width())
+
+            rest_entries = lines[1:5]  # Rest of the entries to be displayed under "The Rest"
+
+            # Render "The Rest" below the first-place entry
+            rest_text = scoreboard_font.render("The Rest", True, white)
+            rest_rect = rest_text.get_rect(center=(screen.get_width() // 2, 200))
+            screen.blit(rest_text, rest_rect)
+
+            starting_y = 250
+            padding = 60  # Increased padding between entries
+            for i, line in enumerate(rest_entries):  # Display rest of the scores
+                score_data = line.strip().split(',')
+                name = score_data[0]
+                score = float(score_data[1])
+
+                score_text = f"{i + 2}. {name}: {score}"  # Start numbering from 2 for the rest
+                score_surface = scoreboard_font.render(score_text, True, white)
+                score_entries.append(score_surface)
+                max_width = max(max_width, score_surface.get_width())
+
+            max_width += 20  # Adding additional padding to the maximum width
+
+            starting_y = 250
+            for i, entry in enumerate(score_entries):  # Render rest of the entries with adjusted alignment
+                entry_rect = entry.get_rect(center=(screen.get_width() // 2, starting_y))
+                entry_rect.centerx = screen.get_width() // 2  # Set the center of the rect horizontally
+                screen.blit(entry, entry_rect)
+                starting_y += padding  # Increase the Y-coordinate spacing between entries
+
+
+        except :
+            error_message = scoreboard_font.render("No scores yet!", True, white)
+            error_rect = error_message.get_rect(center=(screen.get_width() // 2, 200))
+            screen.blit(error_message, error_rect)
+
+
+        pygame.display.flip()
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        mainMenu(screen)
+
 
 def multiplayerScoreBoard():
-
+    return_value = difficultySelect(screen)
     #screen.fill(black)
     score_background = pygame.image.load('Pacman/images/scoreboard.png')
     screen.blit(score_background, (-20,0))
     scoreboard_font = pygame.font.Font(None, 36)
 
-    try:
-        with open('scoresMultiplayer.csv', 'r') as file:
-            lines = file.readlines()
-        lines.sort(key=lambda x: int(x.split(',')[1]), reverse=True)  # Sort scores by the second column (score)
-        
+    #Adds pauses if difficulty is easy or medium
+    if return_value == 0:
+        try:
+            with open('scoresMultiplayerEas.csv', 'r') as file:
+                lines = file.readlines()
+            lines.sort(key=lambda x: float(x.split(',')[1]))  # Sort scores by the second column (score)
+            
 
-        title = scoreboard_font.render("Scoreboard", True, white)
-        title_rect = title.get_rect(center=(screen.get_width() // 2, 50))
-        screen.blit(title, title_rect)
+            title = scoreboard_font.render("Scoreboard", True, white)
+            title_rect = title.get_rect(center=(screen.get_width() // 2, 50))
+            screen.blit(title, title_rect)
 
-        max_width = 0
-        score_entries = []
+            max_width = 0
+            score_entries = []
 
-        alpha_label = scoreboard_font.render("Alpha Lion King Dragon Winner", True, white)
-        alpha_rect = alpha_label.get_rect(center=(screen.get_width() // 2, 80))
-        screen.blit(alpha_label, alpha_rect)
+            alpha_label = scoreboard_font.render("Alpha Lion King Dragon Winner", True, yellow)
+            alpha_rect = alpha_label.get_rect(center=(screen.get_width() // 2, 80))
+            screen.blit(alpha_label, alpha_rect)
 
-        first_entry = lines[0]  # First entry will be displayed above "The Rest"
-        first_data = first_entry.strip().split(',')
-        first_name = first_data[0]
-        first_score = int(first_data[1])
+            first_entry = lines[0]  # First entry will be displayed above "The Rest"
+            first_data = first_entry.strip().split(',')
+            first_name = first_data[0]
+            first_score = float(first_data[1])
 
-        # Display first entry above "The Rest"
-        first_text = f"1. {first_name}: {first_score}"
-        first_surface = scoreboard_font.render(first_text, True, white)
-        first_rect = first_surface.get_rect(center=(screen.get_width() // 2, 120))
-        screen.blit(first_surface, first_rect)
-        max_width = max(max_width, first_surface.get_width())
+            # Display first entry above "The Rest"
+            first_text = f"1. {first_name}: {first_score}"
+            first_surface = scoreboard_font.render(first_text, True, yellow)
+            first_rect = first_surface.get_rect(center=(screen.get_width() // 2, 120))
+            screen.blit(first_surface, first_rect)
+            max_width = max(max_width, first_surface.get_width())
 
-        rest_entries = lines[1:5]  # Rest of the entries to be displayed under "The Rest"
+            rest_entries = lines[1:5]  # Rest of the entries to be displayed under "The Rest"
 
-        # Render "The Rest" below the first-place entry
-        rest_text = scoreboard_font.render("The Rest", True, white)
-        rest_rect = rest_text.get_rect(center=(screen.get_width() // 2, 200))
-        screen.blit(rest_text, rest_rect)
+            # Render "The Rest" below the first-place entry
+            rest_text = scoreboard_font.render("The Rest", True, white)
+            rest_rect = rest_text.get_rect(center=(screen.get_width() // 2, 200))
+            screen.blit(rest_text, rest_rect)
 
-        starting_y = 250
-        padding = 60  # Increased padding between entries
-        for i, line in enumerate(rest_entries):  # Display rest of the scores
-            score_data = line.strip().split(',')
-            name = score_data[0]
-            score = int(score_data[1])
+            starting_y = 250
+            padding = 60  # Increased padding between entries
+            for i, line in enumerate(rest_entries):  # Display rest of the scores
+                score_data = line.strip().split(',')
+                name = score_data[0]
+                score = float(score_data[1])
 
-            score_text = f"{i + 2}. {name}: {score}"  # Start numbering from 2 for the rest
-            score_surface = scoreboard_font.render(score_text, True, white)
-            score_entries.append(score_surface)
-            max_width = max(max_width, score_surface.get_width())
+                score_text = f"{i + 2}. {name}: {score}"  # Start numbering from 2 for the rest
+                score_surface = scoreboard_font.render(score_text, True, white)
+                score_entries.append(score_surface)
+                max_width = max(max_width, score_surface.get_width())
 
-        max_width += 20  # Adding additional padding to the maximum width
+            max_width += 20  # Adding additional padding to the maximum width
 
-        starting_y = 250
-        for i, entry in enumerate(score_entries):  # Render rest of the entries with adjusted alignment
-            entry_rect = entry.get_rect(center=(screen.get_width() // 2, starting_y))
-            entry_rect.centerx = screen.get_width() // 2  # Set the center of the rect horizontally
-            screen.blit(entry, entry_rect)
-            starting_y += padding  # Increase the Y-coordinate spacing between entries
-
-
-    except FileNotFoundError:
-        error_message = scoreboard_font.render("No scores yet!", True, white)
-        error_rect = error_message.get_rect(center=(screen.get_width() // 2, 200))
-        screen.blit(error_message, error_rect)
+            starting_y = 250
+            for i, entry in enumerate(score_entries):  # Render rest of the entries with adjusted alignment
+                entry_rect = entry.get_rect(center=(screen.get_width() // 2, starting_y))
+                entry_rect.centerx = screen.get_width() // 2  # Set the center of the rect horizontally
+                screen.blit(entry, entry_rect)
+                starting_y += padding  # Increase the Y-coordinate spacing between entries
 
 
-    pygame.display.flip()
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    mainMenu(screen)
+        except :
+            error_message = scoreboard_font.render("No scores yet!", True, white)
+            error_rect = error_message.get_rect(center=(screen.get_width() // 2, 200))
+            screen.blit(error_message, error_rect)
+
+
+        pygame.display.flip()
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        mainMenu(screen)
+    
+    elif return_value == 1:
+        try:
+            with open('scoresMultiplayerMed.csv', 'r') as file:
+                lines = file.readlines()
+            lines.sort(key=lambda x: float(x.split(',')[1]))  # Sort scores by the second column (score)
+            
+
+            title = scoreboard_font.render("Scoreboard", True, white)
+            title_rect = title.get_rect(center=(screen.get_width() // 2, 50))
+            screen.blit(title, title_rect)
+
+            max_width = 0
+            score_entries = []
+
+            alpha_label = scoreboard_font.render("Alpha Lion King Dragon Winner", True, yellow)
+            alpha_rect = alpha_label.get_rect(center=(screen.get_width() // 2, 80))
+            screen.blit(alpha_label, alpha_rect)
+
+            first_entry = lines[0]  # First entry will be displayed above "The Rest"
+            first_data = first_entry.strip().split(',')
+            first_name = first_data[0]
+            first_score = float(first_data[1])
+
+            # Display first entry above "The Rest"
+            first_text = f"1. {first_name}: {first_score}"
+            first_surface = scoreboard_font.render(first_text, True, yellow)
+            first_rect = first_surface.get_rect(center=(screen.get_width() // 2, 120))
+            screen.blit(first_surface, first_rect)
+            max_width = max(max_width, first_surface.get_width())
+
+            rest_entries = lines[1:5]  # Rest of the entries to be displayed under "The Rest"
+
+            # Render "The Rest" below the first-place entry
+            rest_text = scoreboard_font.render("The Rest", True, white)
+            rest_rect = rest_text.get_rect(center=(screen.get_width() // 2, 200))
+            screen.blit(rest_text, rest_rect)
+
+            starting_y = 250
+            padding = 60  # Increased padding between entries
+            for i, line in enumerate(rest_entries):  # Display rest of the scores
+                score_data = line.strip().split(',')
+                name = score_data[0]
+                score = float(score_data[1])
+
+                score_text = f"{i + 2}. {name}: {score}"  # Start numbering from 2 for the rest
+                score_surface = scoreboard_font.render(score_text, True, white)
+                score_entries.append(score_surface)
+                max_width = max(max_width, score_surface.get_width())
+
+            max_width += 20  # Adding additional padding to the maximum width
+
+            starting_y = 250
+            for i, entry in enumerate(score_entries):  # Render rest of the entries with adjusted alignment
+                entry_rect = entry.get_rect(center=(screen.get_width() // 2, starting_y))
+                entry_rect.centerx = screen.get_width() // 2  # Set the center of the rect horizontally
+                screen.blit(entry, entry_rect)
+                starting_y += padding  # Increase the Y-coordinate spacing between entries
+
+
+        except:
+            error_message = scoreboard_font.render("No scores yet!", True, white)
+            error_rect = error_message.get_rect(center=(screen.get_width() // 2, 200))
+            screen.blit(error_message, error_rect)
+
+
+        pygame.display.flip()
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        mainMenu(screen)
+
+    elif return_value == 2:
+        try:
+            with open('scoresMultiplayerHar.csv', 'r') as file:
+                lines = file.readlines()
+            lines.sort(key=lambda x: float(x.split(',')[1]))  # Sort scores by the second column (score)
+            
+
+            title = scoreboard_font.render("Scoreboard", True, white)
+            title_rect = title.get_rect(center=(screen.get_width() // 2, 50))
+            screen.blit(title, title_rect)
+
+            max_width = 0
+            score_entries = []
+
+            alpha_label = scoreboard_font.render("Alpha Lion King Dragon Winner", True, yellow)
+            alpha_rect = alpha_label.get_rect(center=(screen.get_width() // 2, 80))
+            screen.blit(alpha_label, alpha_rect)
+
+            first_entry = lines[0]  # First entry will be displayed above "The Rest"
+            first_data = first_entry.strip().split(',')
+            first_name = first_data[0]
+            first_score = float(first_data[1])
+
+            # Display first entry above "The Rest"
+            first_text = f"1. {first_name}: {first_score}"
+            first_surface = scoreboard_font.render(first_text, True, yellow)
+            first_rect = first_surface.get_rect(center=(screen.get_width() // 2, 120))
+            screen.blit(first_surface, first_rect)
+            max_width = max(max_width, first_surface.get_width())
+
+            rest_entries = lines[1:5]  # Rest of the entries to be displayed under "The Rest"
+
+            # Render "The Rest" below the first-place entry
+            rest_text = scoreboard_font.render("The Rest", True, white)
+            rest_rect = rest_text.get_rect(center=(screen.get_width() // 2, 200))
+            screen.blit(rest_text, rest_rect)
+
+            starting_y = 250
+            padding = 60  # Increased padding between entries
+            for i, line in enumerate(rest_entries):  # Display rest of the scores
+                score_data = line.strip().split(',')
+                name = score_data[0]
+                score = float(score_data[1])
+
+                score_text = f"{i + 2}. {name}: {score}"  # Start numbering from 2 for the rest
+                score_surface = scoreboard_font.render(score_text, True, white)
+                score_entries.append(score_surface)
+                max_width = max(max_width, score_surface.get_width())
+
+            max_width += 20  # Adding additional padding to the maximum width
+
+            starting_y = 250
+            for i, entry in enumerate(score_entries):  # Render rest of the entries with adjusted alignment
+                entry_rect = entry.get_rect(center=(screen.get_width() // 2, starting_y))
+                entry_rect.centerx = screen.get_width() // 2  # Set the center of the rect horizontally
+                screen.blit(entry, entry_rect)
+                starting_y += padding  # Increase the Y-coordinate spacing between entries
+
+
+        except :
+            error_message = scoreboard_font.render("No scores yet!", True, white)
+            error_rect = error_message.get_rect(center=(screen.get_width() // 2, 200))
+            screen.blit(error_message, error_rect)
+
+
+        pygame.display.flip()
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        mainMenu(screen)
 
 
 def mainMenu(screen):
