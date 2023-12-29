@@ -20,9 +20,9 @@ Trollicon=pygame.image.load('Pacman\\images\\Overflow.png')
 pygame.display.set_icon(Trollicon)
 
 #Add music =================================== Future can add our own music =========================================
-# pygame.mixer.init()
-# pygame.mixer.music.load('../Pacman/pacman.mp3')
-# pygame.mixer.music.play(-1, 0.0)
+pygame.mixer.init()
+pygame.mixer.music.load('Pacman/pacman.mp3')
+pygame.mixer.music.play(-1, 0.0)
 
 # This class represents the bar at the bottom that the player controls
 class Wall(pygame.sprite.Sprite):
