@@ -13,7 +13,7 @@ green = (0,255,0)
 red = (255,0,0)
 purple = (255,0,255)
 yellow   = ( 255, 255,   0)
-colours = [blue,green,red,purple,yellow]
+colours = [blue,green,purple,yellow]
 rand_color = random.randint(0,len(colours))
 
 Trollicon=pygame.image.load('Pacman\\images\\Overflow.png')
@@ -422,6 +422,7 @@ clock = pygame.time.Clock()
 
 pygame.font.init()
 font = pygame.font.Font("freesansbold.ttf", 24)
+font_small = pygame.font.Font("freesansbold.ttf", 20)
 
 #default locations for Pacman and monstas
 w = 303-16 #Width
@@ -605,6 +606,8 @@ def startSingleplayerGame():
    
       # ALL CODE TO DRAW SHOULD GO BELOW THIS COMMENT
       screen.fill(black)
+      bg = pygame.image.load('Pacman/images/map_bg.png') ######## uncomment for map background ##########
+      screen.blit(bg, (200, 200)) ######## uncomment for map background ##########
         
       wall_list.draw(screen)
       gate.draw(screen)
@@ -774,8 +777,10 @@ def startMultiplayerGame():
               if event.key == pygame.K_DOWN:
                   Pacman.changespeed(0,30)
               if event.key == 97:
+                  print(event.key)
                   Pacman2.changespeed(-30,0)
               if event.key == 100:
+                  print(event.key)
                   Pacman2.changespeed(30,0)
               if event.key == 119:
                   Pacman2.changespeed(0,-30)
@@ -851,6 +856,8 @@ def startMultiplayerGame():
    
       # ALL CODE TO DRAW SHOULD GO BELOW THIS COMMENT
       screen.fill(black)
+      bg = pygame.image.load('Pacman/images/map_bg.png') ######## uncomment for map background ##########
+      screen.blit(bg, (200, 200)) ######## uncomment for map background ##########
         
       wall_list.draw(screen)
       gate.draw(screen)
@@ -859,15 +866,15 @@ def startMultiplayerGame():
     
       
 
-      text=font.render("Score: "+str(score)+"/"+str(bll), True, red)
-      screen.blit(text, [10, 10])
-      text1=font.render("Light Score: "+str(pacman1_score)+"/"+str(bll), True, red)
-      screen.blit(text1, [10, 40])
-      text2=font.render("Dark Score: "+str(pacman2_score)+"/"+str(bll), True, red)
-      screen.blit(text2, [10, 70])
+      text=font_small.render("Score: "+str(score)+"/"+str(bll), True, red)
+      screen.blit(text, [300, 10])
+      text1=font_small.render("Light: "+str(pacman1_score)+"/"+str(bll), True, red)
+      screen.blit(text1, [10, 10])
+      text2=font_small.render("Dark: "+str(pacman2_score)+"/"+str(bll), True, red)
+      screen.blit(text2, [160, 10])
 
-      game_time =font.render(f"Time: {stopwatch_time:.4f}", True, red)
-      screen.blit(game_time, [430, 10])
+      game_time =font_small.render(f"Time: {stopwatch_time:.4f}", True, red)
+      screen.blit(game_time, [460, 10])
 
       if score == bll:
         if return_value == 0:
@@ -888,8 +895,8 @@ def startMultiplayerGame():
       monsta_hit_list2 = pygame.sprite.spritecollide(Pacman2, monsta_list, False)
 
       if monsta_hit_list or monsta_hit_list2:
-        with open ('scoresMultiplayer.csv', 'a') as file:
-            file.write(username + " , " + str(score) +'\n')
+        # with open ('scoresMultiplayer.csv', 'a') as file:
+        #     file.write(username + " , " + str(score) +'\n')
         doNextMultiplayer("Game Over",235,all_sprites_list,block_list,monsta_list,pacman_collide,wall_list,gate)
 
       # ALL CODE TO DRAW SHOULD GO ABOVE THIS COMMENT
@@ -1524,6 +1531,7 @@ def initScreen():
 def main():
     username = mainMenu(screen)
     if username:
+        print("Username entered:", username)
         startSingleplayerGame()
 
     pygame.quit()
