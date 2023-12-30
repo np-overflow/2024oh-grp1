@@ -774,10 +774,8 @@ def startMultiplayerGame():
               if event.key == pygame.K_DOWN:
                   Pacman.changespeed(0,30)
               if event.key == 97:
-                  print(event.key)
                   Pacman2.changespeed(-30,0)
               if event.key == 100:
-                  print(event.key)
                   Pacman2.changespeed(30,0)
               if event.key == 119:
                   Pacman2.changespeed(0,-30)
@@ -1526,7 +1524,6 @@ def initScreen():
 def main():
     username = mainMenu(screen)
     if username:
-        print("Username entered:", username)
         startSingleplayerGame()
 
     pygame.quit()
