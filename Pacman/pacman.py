@@ -16,7 +16,7 @@ yellow   = ( 255, 255,   0)
 colours = [blue,green,purple,yellow]
 rand_color = random.randint(0,len(colours))
 
-Trollicon=pygame.image.load('Pacman\\images\\Overflow.png')
+Trollicon=pygame.image.load('Pacman/images/Overflow.png')
 pygame.display.set_icon(Trollicon)
 
 #Add music =================================== Future can add our own music =========================================
