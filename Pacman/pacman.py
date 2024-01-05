@@ -439,11 +439,11 @@ def startSingleplayerGame():
   #Adds pauses if difficulty is easy or medium
   if return_value == 0:
     directions = copy.deepcopy(all_directions)
-    speedAlgorithm(13,15,2,5, directions)
+    speedAlgorithm(30,35,2,5, directions)
     
   elif return_value == 1:
     directions = copy.deepcopy(all_directions)
-    speedAlgorithm(6,9,1,3, directions)
+    speedAlgorithm(13,20,1,3, directions)
 
   elif return_value == 2:
     directions = copy.deepcopy(all_directions)
@@ -652,11 +652,11 @@ def startMultiplayerGame():
   #Adds pauses if difficulty is easy or medium
   if return_value == 0:
     directions = copy.deepcopy(all_directions)
-    speedAlgorithm(13,15,2,5, directions)
+    speedAlgorithm(30,35,2,5, directions)
     
   elif return_value == 1:
     directions = copy.deepcopy(all_directions)
-    speedAlgorithm(6,9,1,3, directions)
+    speedAlgorithm(13,20,1,3, directions)
 
   elif return_value == 2:
     directions = copy.deepcopy(all_directions)
