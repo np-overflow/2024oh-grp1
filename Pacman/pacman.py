@@ -1005,7 +1005,8 @@ def nameEntry(screen):
                 elif event.key == pygame.K_BACKSPACE:
                     name = name[:-1]  # Remove last character on backspace
                 else:
-                    name += event.unicode  # Add typed character to name
+                    if event.unicode != ',':
+                        name += event.unicode  # Add typed character to name
 
         #screen.fill(black)
         name_background = pygame.image.load('Pacman/images/name-entry.png')
