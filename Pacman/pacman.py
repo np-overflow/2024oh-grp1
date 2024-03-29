@@ -708,11 +708,13 @@ def startMultiplayerGame():
   Pacman = Player( w, p_h, "Pacman/images/Overflow.png" )
   all_sprites_list.add(Pacman)
   pacman_collide.add(Pacman)
+  pacman_alive = True
    
   Pacman2 = Player( w, p_h, "Pacman/images/Overflow2.png" )
   all_sprites_list.add(Pacman2)
   pacman2_collide.add(Pacman2)
-   
+  pacman2_alive = True
+     
   Blinky=Ghost( w, b_h, "Pacman/images/AmongUsGreen.png" )
   monsta_list.add(Blinky)
   all_sprites_list.add(Blinky)
@@ -759,13 +761,13 @@ def startMultiplayerGame():
   pacman1_score = 0
   pacman2_score = 0
 
-  done = False
+  #done = False
 
   i = 0
 
   start = time.time()
 
-  while done == False:
+  while pacman_alive or pacman2_alive: #implement logic where game only ends when both players are dead
       cur_time = time.time()
       stopwatch_time = cur_time - start
       # ALL EVENT PROCESSING SHOULD GO BELOW THIS COMMENT
@@ -814,8 +816,10 @@ def startMultiplayerGame():
       # ALL EVENT PROCESSING SHOULD GO ABOVE THIS COMMENT
    
       # ALL GAME LOGIC SHOULD GO BELOW THIS COMMENT
-      Pacman.update(wall_list,gate)
-      Pacman2.update(wall_list,gate)
+      if pacman_alive:
+        Pacman.update(wall_list,gate)
+      if pacman2_alive:
+        Pacman2.update(wall_list,gate)
 
       returned = Pinky.changespeed(Pinky_directions,False,p_turn,p_steps,pl)
       p_turn = returned[0]
@@ -842,19 +846,21 @@ def startMultiplayerGame():
       Clyde.update(wall_list,False)
 
       # See if the Pacman block has collided with anything.
-      pacman1_hit_list = pygame.sprite.spritecollide(Pacman, block_list, True)
-      pacman2_hit_list = pygame.sprite.spritecollide(Pacman2, block_list, True)
+      if pacman_alive:
+        pacman1_hit_list = pygame.sprite.spritecollide(Pacman, block_list, True)
+      if pacman2_alive:
+        pacman2_hit_list = pygame.sprite.spritecollide(Pacman2, block_list, True)
 
       # See if the Pacman2 block has collided with anything.
       blocks_hit_list = pacman1_hit_list + pacman2_hit_list
 
 
       # Check the list of collisions.
-      if len(blocks_hit_list) > 0:
+      if (pacman_alive or pacman2_alive) and len(blocks_hit_list) > 0:
           score +=len(blocks_hit_list)
-      if len(pacman1_hit_list) > 0:
+      if pacman_alive and len(pacman1_hit_list) > 0:
           pacman1_score +=len(pacman1_hit_list)
-      if len(pacman2_hit_list) > 0:
+      if pacman2_alive and len(pacman2_hit_list) > 0:
           pacman2_score +=len(pacman2_hit_list)
       
           
@@ -900,7 +906,17 @@ def startMultiplayerGame():
       
       monsta_hit_list2 = pygame.sprite.spritecollide(Pacman2, monsta_list, False)
 
-      if monsta_hit_list or monsta_hit_list2:
+      if monsta_hit_list:
+          pacman_alive = False
+          if pacman2_alive:
+            Pacman.kill()
+      if monsta_hit_list2:
+          pacman2_alive = False
+          if pacman_alive:
+            Pacman2.kill()
+          
+
+      if not pacman_alive and not pacman2_alive: #monsta_hit_list and monsta_hit_list2:
         # with open ('scoresMultiplayer.csv', 'a') as file:
         #     file.write(username + " , " + str(score) +'\n')
         doNextMultiplayer("Game Over",235,all_sprites_list,block_list,monsta_list,pacman_collide,wall_list,gate)
