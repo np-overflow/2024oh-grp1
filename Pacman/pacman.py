@@ -845,13 +845,17 @@ def startMultiplayerGame():
       Clyde.changespeed(Clyde_directions,"clyde",c_turn,c_steps,cl)
       Clyde.update(wall_list,False)
 
-      # See if the Pacman block has collided with anything.
+      # See if the Pacman blocks have collided with the dots
       if pacman_alive:
         pacman1_hit_list = pygame.sprite.spritecollide(Pacman, block_list, True)
+      else:
+        pacman1_hit_list = []
+        
       if pacman2_alive:
         pacman2_hit_list = pygame.sprite.spritecollide(Pacman2, block_list, True)
+      else:
+        pacman2_hit_list = []
 
-      # See if the Pacman2 block has collided with anything.
       blocks_hit_list = pacman1_hit_list + pacman2_hit_list
 
 
